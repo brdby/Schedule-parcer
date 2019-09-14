@@ -21,6 +21,7 @@ public class Core {
     private Workbook book;
     private Sheet sheet;
     private HashSet<Group> groups;
+    private int counter;
 
     public Core(String file) throws OpenFail {
         book = openBook(file);
@@ -77,13 +78,20 @@ public class Core {
                     if (studyName.equals("")) continue; //Нет предмета
 
                     studyName = studyName.replaceAll("\n", ""); //Убираем все переносы строки
-                    String StRegex  = "[,0-9]*[^0-9]+[а-я]"; //Разделяем предметы
-                    //String StRegex  = ".*";
+                    String StRegex  = "([крКР. ]*[0-9, ]+[нН]+[ ,]*[^0-9]+)|([а-яА-Я][^0-9]+)"; //Разделяем предметы
+                    //String StRegex  = ".+";
                     Pattern sp = Pattern.compile(StRegex);
                     Matcher sm = sp.matcher(studyName);
+
+                    //Когда разные предметы в одной ячейке
                     while (sm.find()){
-                        Study study = new Study(studyName);
+                        //Оделяем недели от названия предмета
+                        String found = sm.group();
+                        Study study = new Study(found);
+                        String dateID = searchDateID(found);
+                        if (dateID != null) study.setDate(dateID);
                         group.addStudy(study);
+                        counter++;
                     }
                 }
                 groups.add(group);
@@ -91,11 +99,21 @@ public class Core {
         }
     }
 
+    private String searchDateID(String s){
+        String reg  = "[крКР. ]*[0-9, ]+[нН]+[ ,]*";
+        Pattern p = Pattern.compile(reg);
+        Matcher m = p.matcher(s);
+        if (!m.find()) return null;
+        return m.group();
+    }
+
     public void allStudies(){
         groups.forEach(group -> {
             System.out.println(group.toString() + "\n");
             System.out.println("---------------------------------\n");
         });
+
+        System.out.println(counter);
     }
 
 
