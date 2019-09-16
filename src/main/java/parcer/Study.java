@@ -7,7 +7,7 @@ public class Study {
 
     private String row;
     private String name;
-    //private HashSet<LocalDate> dates;
+    private HashSet<LocalDate> dates;
     String dateID;
 
     Study(String fullName) {
@@ -28,7 +28,7 @@ public class Study {
         return row;
     }
 
-    public void setDate(String dateID) {
-        this.dateID = dateID; //TODO
+    public void setDates(HashSet<LocalDate> h) {
+        dates = h;
     }
 }

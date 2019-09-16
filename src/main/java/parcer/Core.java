@@ -12,8 +12,10 @@ import parcer.util.OpenFail;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,11 +24,16 @@ public class Core {
     private Sheet sheet;
     private HashSet<Group> groups;
     private int counter;
+    private DateModule dateModule;
+
+    private final Map<String, Integer> WEEKDAYS = Map.of("ПОНЕДЕЛЬНИК", 1, "ВТОРНИК", 2,
+            "СРЕДА", 3, "ЧЕТВЕРГ", 4, "ПЯТНИЦА", 5, "СУББОТА",6, "ВОСКРЕСЕНЬЕ", 7);
 
     public Core(String file) throws OpenFail {
         book = openBook(file);
         sheet = openScheet();
         groups = new HashSet<>();
+        dateModule = new DateModule();
     }
 
     private Workbook openBook(final String path) throws OpenFail {
@@ -89,7 +96,11 @@ public class Core {
                         String found = sm.group();
                         Study study = new Study(found);
                         String dateID = searchDateID(found);
-                        if (dateID != null) study.setDate(dateID);
+                        if (dateID != null) {
+                            String weekDay = sheet.getRow(3).getCell(0).getStringCellValue();
+                            study.setDates(dateModule.getDates(dateID,
+                                    getWeekDay(weekDay)));
+                        }
                         group.addStudy(study);
                         counter++;
                     }
@@ -105,6 +116,10 @@ public class Core {
         Matcher m = p.matcher(s);
         if (!m.find()) return null;
         return m.group();
+    }
+
+    private int getWeekDay(String s){
+        return WEEKDAYS.get(s);
     }
 
     public void allStudies(){
