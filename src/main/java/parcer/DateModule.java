@@ -4,12 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DateModule {
-    private Calendar point = Calendar.getInstance();
+    private Calendar point;
     private final int MAXWEEK = 17;
 
     public DateModule(){
@@ -64,11 +65,9 @@ public class DateModule {
 
     private void getFirstDay(LocalDate date){
         if (date.getMonth().getValue() > 7) {
-            System.out.println(point.toString());
-            point.set(date.getYear(), Calendar.SEPTEMBER, 1);
-            System.out.println(point.toString());
-            if (date.getDayOfWeek().getValue() == 7){
-                point.set(Calendar.DATE, 2);
+            point = new GregorianCalendar(date.getYear(), Calendar.SEPTEMBER, 1);
+            if (point.get(Calendar.DAY_OF_WEEK) == 1){
+                point = new GregorianCalendar( date.getYear(), Calendar.SEPTEMBER, 2);
             }
         }
     }

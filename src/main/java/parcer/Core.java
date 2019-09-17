@@ -26,8 +26,8 @@ public class Core {
     private int counter;
     private DateModule dateModule;
 
-    private final Map<String, Integer> WEEKDAYS = Map.of("ПОНЕДЕЛЬНИК", 1, "ВТОРНИК", 2,
-            "СРЕДА", 3, "ЧЕТВЕРГ", 4, "ПЯТНИЦА", 5, "СУББОТА",6, "ВОСКРЕСЕНЬЕ", 7);
+    private final Map<String, Integer> WEEKDAYS = Map.of("ПОНЕДЕЛЬНИК", 2, "ВТОРНИК", 3,
+            "СРЕДА", 4, "ЧЕТВЕРГ", 5, "ПЯТНИЦА", 6, "СУББОТА",7, "ВОСКРЕСЕНЬЕ", 1);
 
     public Core(String file) throws OpenFail {
         book = openBook(file);
