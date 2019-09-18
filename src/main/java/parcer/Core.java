@@ -1,18 +1,17 @@
 package parcer;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
-import parcer.util.CloseFail;
-import parcer.util.OpenFail;
+import parcer.util.exeptions.CloseFail;
+import parcer.util.exeptions.NoEvenPointer;
+import parcer.util.exeptions.NoWeekPointer;
+import parcer.util.exeptions.OpenFail;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.GenericArrayType;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class Core {
         return sheet;
     }
 
-    public void findStudies() {
+    public void findStudies() throws NoWeekPointer, NoEvenPointer {
         //Ищем колонки с предметами
         Iterator<Cell> ic = sheet.getRow(2).cellIterator();
         while (ic.hasNext()){
@@ -96,11 +95,16 @@ public class Core {
                         String found = sm.group();
                         Study study = new Study(found);
                         String dateID = searchDateID(found);
+                        String weekDay = sheet.getRow(((i-3)/12)*12+3).getCell(0).getStringCellValue();
+                        String evenID = sheet.getRow(i).getCell(4).getStringCellValue();
+                        
+                        //Если есть номера недель
                         if (dateID != null) {
-                            String weekDay = sheet.getRow(3).getCell(0).getStringCellValue();
-                            study.setDates(dateModule.getDates(dateID,
-                                    getWeekDay(weekDay)));
+                            study.setDates(dateModule.getDates(dateID, getWeekDay(weekDay), searchEven(evenID)));
+                        } else {
+                            study.setDates(dateModule.getDates(getWeekDay(weekDay), searchEven(evenID)));
                         }
+
                         group.addStudy(study);
                         counter++;
                     }
@@ -108,6 +112,12 @@ public class Core {
                 groups.add(group);
             }
         }
+    }
+
+    private boolean searchEven(String s) throws NoEvenPointer {
+        if (s.equals("I")) return false;
+        if (s.equals("II")) return true;
+        else throw new NoEvenPointer("Can't find even pointer");
     }
 
     private String searchDateID(String s){
@@ -118,8 +128,12 @@ public class Core {
         return m.group();
     }
 
-    private int getWeekDay(String s){
-        return WEEKDAYS.get(s);
+    private int getWeekDay(String s) throws NoWeekPointer {
+        Integer ans = WEEKDAYS.get(s);
+        if (s == null || s.equals("") || ans == null) {
+            throw new NoWeekPointer("Can't find week pointer");
+        }
+        return ans;
     }
 
     public void allStudies(){

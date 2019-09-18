@@ -1,4 +1,4 @@
-package parcer.util;
+package parcer.util.exeptions;
 
 public class
 CloseFail extends Exception {

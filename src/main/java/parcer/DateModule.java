@@ -18,44 +18,70 @@ public class DateModule {
         getFirstDay(d);
     }
 
-    public HashSet<LocalDate> getDates(String s, int weekDay){
-        HashSet<LocalDate> ld = new HashSet<>();
+    public HashSet<Calendar> getDates(int weekDay, boolean even){
+        //Хэшсет с датами этого предмета
+        HashSet<Calendar> ld = new HashSet<>();
 
+        //Для указателя ставим нужный день недели
         point.set(Calendar.DAY_OF_WEEK, weekDay);
 
+        //Нужны четные или нечетные недели
+        int ev = 0;
+        if (even) ev ++;
+        for (int i = ev; i < MAXWEEK; i = i+2){
+            Calendar studyDay = (GregorianCalendar) point.clone();
+            studyDay.add(Calendar.DATE, i*7);
+            ld.add(studyDay);
+        }
+
+        return ld;
+    }
+
+    public HashSet<Calendar> getDates(String s, int weekDay, boolean even){
+        //Хэшсет с датами этого предмета
+        HashSet<Calendar> ld = new HashSet<>();
+
+        //Для указателя ставим нужный день недели
+        point.set(Calendar.DAY_OF_WEEK, weekDay);
+
+        //Провряем на "кроме"
         boolean reverse = false;
         Pattern p = Pattern.compile("[кК][рР]");
         Matcher m = p.matcher(s);
-
         if (m.find()) {
             reverse = true;
         }
         ArrayList<Integer> reverseWeeks = new ArrayList<>();
 
+        //Ищем номера нужных недель
         p = Pattern.compile("[0-9]+");
         m = p.matcher(s);
 
+        //Если нашли, добавляем нужную дату в сет
         while (m.find()) {
             String aaa = m.group();
             int weekNum = Integer.parseInt(aaa);
             if (!reverse) {
-                LocalDate localDate = LocalDateTime.ofInstant(point.toInstant(),
-                        point.getTimeZone().toZoneId()).toLocalDate();
-                localDate = localDate.plusWeeks(weekNum - 1);
-                ld.add(localDate);
+                Calendar studyDay = (GregorianCalendar) point.clone();
+                studyDay.add(Calendar.DATE, 7*(weekNum-1));
+                ld.add(studyDay);
             }
             else {
+                //Если "кр" то сохраняем номера этих недель для будущего их исключения
                 reverseWeeks.add(weekNum);
             }
         }
 
+        //Если "кр" добавляем все даты кроме исключенных
         if (reverse){
-            for (int i = 0; i < MAXWEEK; i++){
+            //Нужны четные или нечетные недели
+            int ev = 0;
+            if (even) ev ++;
+            for (int i = ev; i < MAXWEEK; i = i+2){
                 if (!reverseWeeks.contains(i)) {
-                    LocalDate localDate = LocalDateTime.ofInstant(point.toInstant(),
-                            point.getTimeZone().toZoneId()).toLocalDate();
-                    localDate = localDate.plusWeeks(i);
-                    ld.add(localDate);
+                    Calendar studyDay = (GregorianCalendar) point.clone();
+                    studyDay.add(Calendar.DATE, i*7);
+                    ld.add(studyDay);
                 }
             }
         }

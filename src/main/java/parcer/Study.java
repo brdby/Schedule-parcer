@@ -1,14 +1,14 @@
 package parcer;
 
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.HashSet;
 
 public class Study {
 
     private String row;
     private String name;
-    private HashSet<LocalDate> dates;
-    String dateID;
+    private HashSet<Calendar> dates;
 
     Study(String fullName) {
         this.row = fullName;
@@ -28,7 +28,7 @@ public class Study {
         return row;
     }
 
-    public void setDates(HashSet<LocalDate> h) {
+    public void setDates(HashSet<Calendar> h) {
         dates = h;
     }
 }
