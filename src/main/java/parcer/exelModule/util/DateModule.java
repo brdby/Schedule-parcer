@@ -1,22 +1,17 @@
-package parcer;
+package parcer.exelModule.util;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DateModule {
     private Calendar point;
     private final int MAXWEEK = 17;
 
+    /*
     public DateModule(){
         LocalDate d = LocalDate.now();
         getFirstDay(d);
     }
+
 
     public HashSet<Calendar> getDates(int weekDay, boolean even){
         //Хэшсет с датами этого предмета
@@ -97,4 +92,5 @@ public class DateModule {
             }
         }
     }
+    */
 }
