@@ -15,6 +15,7 @@
 
 # Idea configuration files
 .idea/
+target/
 
 # Data base
-.db
+*.db
