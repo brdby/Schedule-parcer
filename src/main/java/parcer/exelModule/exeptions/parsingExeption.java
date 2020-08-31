@@ -1,8 +1,8 @@
 package parcer.exelModule.exeptions;
 
 public class
-exelExeption extends Exception {
-    public exelExeption(String t){
+parsingExeption extends Exception {
+    public parsingExeption(String t){
         super(t);
     }
 }

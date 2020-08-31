@@ -2,8 +2,7 @@ import parcer.dbModule.DBHandler;
 import parcer.exelModule.Core;
 import parcer.exelModule.entity.Group;
 import parcer.exelModule.entity.Study;
-import parcer.exelModule.exeptions.exelExeption;
-import parcer.exelModule.exeptions.parcingExeption;
+import parcer.exelModule.exeptions.parsingExeption;
 
 import java.sql.SQLException;
 
@@ -12,18 +11,16 @@ public class Main {
         try {
             Core schedule = new Core("r.xlsx");
             schedule.findStudies();
-
             DBHandler db = DBHandler.getInstance();
 
             for (Group  g: schedule.getGroups() ){
-                db.insertGroup(g.getName());
                 for (Study s : g.getStudies()){
-                    db.insertStudy(g.getName(), s.getName());
+                    db.insertStudy(g.getName(), s.getName(), s.getDates());
                 }
                 System.out.println("Внесена группа " + g.getName());
             }
             schedule.close();
-        } catch (parcingExeption | exelExeption | SQLException | ClassNotFoundException e) {
+        } catch (parsingExeption | SQLException | ClassNotFoundException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }

@@ -11,7 +11,6 @@ public class Study {
 
     public Study(String fullName) {
         this.row = fullName;
-        name = fullName;
     }
 
     public String getName() {

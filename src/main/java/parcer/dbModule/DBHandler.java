@@ -21,28 +21,14 @@ public class DBHandler {
         Class.forName("org.sqlite.JDBC");
         connection = DriverManager.getConnection(CON_STR);
         Statement statement = connection.createStatement();
-        statement.execute("CREATE TABLE if not exists 'group' ('id' INTEGER PRIMARY KEY, 'name' TEXT);");
-        statement.execute("CREATE TABLE if not exists 'study' ('id' INTEGER , 'name' TEXT, FOREIGN KEY ('id') REFERENCES 'group' ('id'));");
+        statement.execute("CREATE TABLE if not exists 'study' ('groupName' TEXT , 'studyName' TEXT, 'studyDates' TEXT);");
         statement.close();
         System.out.println("База данных инициализирована");
     }
 
-    public void insertGroup(String groupName) throws SQLException {
+    public void insertStudy(String groupName, String studyName, String studyDates) throws SQLException {
         Statement statement = connection.createStatement();
-        statement.execute("INSERT INTO 'group' ('name') VALUES ('" + groupName + "');");
-        statement.close();
-    }
-
-    public void insertStudy(String groupName, String studyName) throws SQLException {
-        int id;
-
-        Statement statement = connection.createStatement();
-        ResultSet group = statement.executeQuery("SELECT 'id' FROM 'group' WHERE 'name' = '" + groupName + "';");
-        if (group.next()){
-            id = group.getInt("id");
-        }
-        else return;
-        statement.execute("INSERT INTO 'study' ('id', 'name') VALUES ('" + id + "', '" + studyName + "');");
+        statement.execute("INSERT INTO 'study' ('groupName', 'studyName', 'studyDates') VALUES ('" + groupName + "', '" + studyName + "', '" + studyDates + "');");
         statement.close();
     }
 

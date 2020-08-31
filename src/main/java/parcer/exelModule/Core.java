@@ -6,8 +6,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import parcer.exelModule.entity.Group;
 import parcer.exelModule.entity.Study;
-import parcer.exelModule.exeptions.exelExeption;
-import parcer.exelModule.exeptions.parcingExeption;
+import parcer.exelModule.exeptions.parsingExeption;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,45 +20,44 @@ public class Core {
     private Workbook book;
     private Sheet sheet;
     private HashSet<Group> groups;
-    private int counter;
 
-    private final Map<String, Integer> WEEKDAYS = Map.of("ПОНЕДЕЛЬНИК", 2, "ВТОРНИК", 3,
-            "СРЕДА", 4, "ЧЕТВЕРГ", 5, "ПЯТНИЦА", 6, "СУББОТА",7, "ВОСКРЕСЕНЬЕ", 1);
+    private final Map<String, Integer> WEEKDAYS = Map.of("ПОНЕДЕЛЬНИК", 1, "ВТОРНИК", 2,
+            "СРЕДА", 3, "ЧЕТВЕРГ", 4, "ПЯТНИЦА", 5, "СУББОТА",6, "ВОСКРЕСЕНЬЕ", 7);
 
-    public Core(String file) throws exelExeption {
+    public Core(String file) throws parsingExeption {
         book = openBook(file);
         sheet = openScheet();
         groups = new HashSet<>();
     }
 
-    private Workbook openBook(final String path) throws exelExeption {
+    private Workbook openBook(final String path) throws parsingExeption {
         try {
             File file = new File(path);
             return XSSFWorkbookFactory.create(file);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new exelExeption("Can't open the shedule");
+            throw new parsingExeption("Can't open the shedule");
         }
     }
 
 
 
-    public void close() throws exelExeption {
+    public void close() throws parsingExeption {
         try {
             book.close();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new exelExeption("Can't close the shedule");
+            throw new parsingExeption("Can't close the shedule");
         }
     }
 
-    private Sheet openScheet() throws exelExeption {
+    private Sheet openScheet() throws parsingExeption {
         Sheet sheet = book.getSheetAt(0);
-        if (sheet == null) throw new exelExeption("Can't open the scheet");
+        if (sheet == null) throw new parsingExeption("Can't open the scheet");
         return sheet;
     }
 
-    public void findStudies() throws parcingExeption {
+    public void findStudies() throws parsingExeption {
         //Ищем колонки с предметами
         Iterator<Cell> ic = sheet.getRow(2).cellIterator();
         while (ic.hasNext()){
@@ -71,18 +69,21 @@ public class Core {
                 String GrRegex = "[А-Я]{4}-[0-9]{2}-[0-9]{2}";
                 Pattern gp = Pattern.compile(GrRegex);
                 Matcher gm = gp.matcher(sheet.getRow(1).getCell(colInd).getStringCellValue());
-                if (!gm.find()) break; //Не нашли имя группы
+                if (!gm.find()) throw new parsingExeption("Не нашли имя группы");
                 Group group = new Group(gm.group());
 
                 //Ищем предметы этой группы
                 for (int i = 3; i < 75; i++){
-                    String studyName =  sheet.getRow(i).getCell(colInd).getStringCellValue();
+                    Cell studyNameCell = sheet.getRow(i).getCell(colInd);
+                    if (studyNameCell == null) continue;
 
+                    String studyName =  studyNameCell.getStringCellValue();
                     if (studyName.equals("")) continue; //Нет предмета
 
                     studyName = studyName.replaceAll("\n", ""); //Убираем все переносы строки
-                    String StRegex  = "([крКР. ]*[0-9, ]+[нН]+[ ,]*[^0-9]+)|([а-яА-Я][^0-9]+)"; //Разделяем предметы
-                    //String StRegex  = ".+";
+                    studyName = studyName.replaceAll("([^а-яА-Я]нед[^а-яА-Я])|([^а-яА-Я]нед$)|(^нед[^а-яА-Я])", " "); //костыль
+                    studyName = studyName.replaceAll("([^а-яА-Я]н[^а-яА-Я])|([^а-яА-Я]н$)|(^н[^а-яА-Я])", " "); //костыль
+                    String StRegex  = "(([крКР. ]*[0-9][0-9,. ]+[нН]*[ ,]*[^0-9]+)|([^0-9]+[крКР. ]*[0-9][0-9,. ]+[нН]*[ ,]*))|([а-яА-Я][^0-9]+)"; //Разделяем предметы
                     Pattern sp = Pattern.compile(StRegex);
                     Matcher sm = sp.matcher(studyName);
 
@@ -90,13 +91,16 @@ public class Core {
                     while (sm.find()){
                         //Оделяем недели от названия предмета
                         String found = sm.group();
+
                         Study study = new Study(found);
 
                         //Ищем название предмета
-                        String nameRegex = "[^0-9 ]{3}[^0-9]+[^0-9 ]";
-                        Pattern namePattern = Pattern.compile(nameRegex);
-                        Matcher nameMatcher = namePattern.matcher(found);
-                        if(nameMatcher.find()) study.setName(nameMatcher.group());
+                        String name = searchName(found);
+                        if (name == null) {
+                            System.out.println("Skipped " + studyName);
+                            continue;
+                        }
+                        else study.setName(name);
 
                         //Получаем строки с номерами недель, указателем четной (нечетной) недели и днем недели
                         String dateID = searchDateID(found);
@@ -113,7 +117,6 @@ public class Core {
                         study.setEven(searchEven(evenID));
 
                         group.addStudy(study);
-                        counter++;
                     }
                 }
                 groups.add(group);
@@ -122,24 +125,32 @@ public class Core {
         System.out.println("Расписание прочитано");
     }
 
-    private boolean searchEven(String s) throws parcingExeption {
+    private String searchName(String s){
+        String nameRegex = "[^0-9,. ][^0-9]+[^0-9, ]";
+        Pattern p = Pattern.compile(nameRegex);
+        Matcher m = p.matcher(s);
+        if (!m.find()) return null;
+        return m.group();
+    }
+
+    private boolean searchEven(String s) throws parsingExeption {
         if (s.equals("I")) return false;
         if (s.equals("II")) return true;
-        else throw new parcingExeption("Can't find even pointer");
+        else throw new parsingExeption("Can't find even pointer");
     }
 
     private String searchDateID(String s){
-        String reg  = "[крКР. ]*[0-9, ]+[нН]+[ ,]*";
+        String reg  = "([кК][рР][. ]*[0-9][0-9, ]+[ ,]+)|([0-9][0-9, ]+[ ,]+)";
         Pattern p = Pattern.compile(reg);
         Matcher m = p.matcher(s);
         if (!m.find()) return null;
         return m.group();
     }
 
-    private int getWeekDay(String s) throws parcingExeption {
+    private int getWeekDay(String s) throws parsingExeption {
         Integer ans = WEEKDAYS.get(s);
         if (s == null || s.equals("") || ans == null) {
-            throw new parcingExeption("Can't find week pointer");
+            throw new parsingExeption("Can't find week pointer");
         }
         return ans;
     }
